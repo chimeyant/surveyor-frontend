@@ -1,2 +1,2 @@
-# senderwa-client
-Aplikasi Whatssapp Gateway
+# serveyor-client  
+Surveyor Client
