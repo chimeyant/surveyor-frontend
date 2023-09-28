@@ -110,9 +110,9 @@
         @click="drawer = !drawer"
       ></v-app-bar-nav-icon>
       <img
-        src="/images/logo-diskominfo.jpeg"
-        width="54px"
-        height="54px"
+        src="/images/logo.png"
+        width="45px"
+        height="48px"
         alt=""
         :class="device.desktop ? `mt-2 ml-2 mr-2 `:`ml-2 mr-2 `"
       >
