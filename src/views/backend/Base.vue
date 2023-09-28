@@ -132,13 +132,13 @@
       }}</v-toolbar-title>
 
       <v-spacer></v-spacer>
-      <v-btn icon>
+      <!-- <v-btn icon>
         <v-icon color="grey darken-1">mdi-widgets</v-icon>
       </v-btn>
 
       <v-btn icon>
         <v-icon color="grey darken-1">mdi-bell-outline</v-icon>
-      </v-btn>
+      </v-btn> -->
 
       <v-menu
         v-model="menu"

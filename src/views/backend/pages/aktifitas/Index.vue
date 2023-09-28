@@ -1,9 +1,8 @@
 <template>
   <div :class="device.desktop ? `home pa-6 grey lighten-4`:`home pa-0 grey lighten-4`">
-
     <v-row>
       <v-col cols="12">
-        <v-card class="animated animate__backInUp rounded-0">
+        <v-card class="animated animate__bounceIn rounded-0">
           <v-card-title :class="`flex flex-row-reverse ` + theme.color + ` lighten-1`">
             <v-tooltip
               :color="theme.color"
@@ -15,31 +14,13 @@
                   small
                   icon
                   v-on="on"
-                  v-show="page.actions.export"
+                  class="animate__animated animate__shakeY animate__delay-1s"
+                  v-show="page.actions.add"
+                  @click="openForm"
                 >
                   <v-icon
                     :color="theme.mode == 'dark' ? `white` : `black`"
                     @click=""
-                  >mdi-files</v-icon>
-                </v-btn>
-              </template>
-              <span>Export Data</span>
-            </v-tooltip>
-            <v-tooltip
-              :color="theme.color"
-              bottom
-            >
-              <template v-slot:activator="{ on }">
-                <v-btn
-                  text
-                  small
-                  icon
-                  v-on="on"
-                  v-show="page.actions.add"
-                >
-                  <v-icon
-                    :color="theme.mode == 'dark' ? `white` : `black`"
-                    @click="openForm"
                   >add_circle</v-icon>
                 </v-btn>
               </template>
@@ -55,7 +36,6 @@
                   small
                   icon
                   v-on="on"
-                  v-show="page.actions.refresh"
                 >
                   <v-icon
                     :color="theme.mode == 'dark' ? `white` : `black`"
@@ -88,8 +68,7 @@
             class="elevation-2 mb-1"
             :color="theme.color"
             :loading="loading.table"
-            loading-text="Silahkan menunggu, sedang membuka data...!"
-            no-data-text="Tidak adan data untuk ditampilkan"
+            loading-text="Loading... Please wait"
             :search="search"
             hide-default-footer
             @page-count="table.options.pageCount = $event"
@@ -101,25 +80,36 @@
               height="1"
               indeterminate
             ></v-progress-linear>
-
-            <template v-slot:[`item.lokasi`]="{ value }">
-              <v-icon color="red">mdi-google-maps</v-icon>
+            <template v-slot:item.progress="{ value }">
+              <v-progress-linear
+                :color="theme.color"
+                v-model="value"
+                height="25"
+              >
+                <strong>{{ value }}%</strong>
+              </v-progress-linear>
             </template>
+            <template v-slot:item.question="{ value }">
+              <div
+                class="pt-4"
+                v-html="value"
+              >
 
-            <template v-slot:[`item.status`]="{ value }">
+              </div>
+            </template>
+            <template v-slot:item.status="{ value }">
               <v-chip
-                small
                 :color="value.color"
+                small
               >{{ value.text }}</v-chip>
-
             </template>
-            <template v-slot:[`item.aksi`]="{ value }">
+            <template v-slot:item.id="{ value }">
               <v-menu
                 bottom
                 origin="center center"
                 transition="scale-transition"
               >
-                <template v-slot:[`activator`]="{ on, attrs }">
+                <template v-slot:activator="{ on, attrs }">
                   <v-icon
                     :color="theme.color"
                     v-bind="attrs"
@@ -130,22 +120,24 @@
                 </template>
 
                 <v-list>
+
+                  <v-divider v-if="page.delete || page.edit"></v-divider>
                   <v-list-item
-                    @click="editRecord(value.id)"
+                    @click="editRecord(value)"
                     v-show="page.actions.edit"
-                    :disabled="value.disabled"
                   >
                     <v-list-item-title>
-                      <v-icon color="orange">mdi-pencil-circle</v-icon>Ubah
+                      <v-icon color="orange">mdi-pencil-circle</v-icon>
+                      Ubah Data
                     </v-list-item-title>
                   </v-list-item>
                   <v-list-item
-                    @click="postDeleteRecord(value.id)"
+                    @click="postDeleteRecord(value)"
                     v-show="page.actions.delete"
-                    :disabled="value.disabled"
                   >
                     <v-list-item-title>
-                      <v-icon color="red">mdi-delete-circle</v-icon>Hapus
+                      <v-icon color="red">mdi-delete-circle</v-icon>
+                      Hapus Data
                     </v-list-item-title>
                   </v-list-item>
                 </v-list>
@@ -171,13 +163,10 @@
                     <v-checkbox :input-value="active"></v-checkbox>
                   </v-list-item-action>
                   <v-list-item-content>
-                    <v-list-item-title> {{ item.content}}</v-list-item-title>
-                    <v-list-item-subtitle>
-                      <v-chip
-                        small
-                        :color="item.status.color"
-                      >{{ item.status.text }}</v-chip>
-                    </v-list-item-subtitle>
+                    <v-list-item-title
+                      class="pt-4"
+                      v-html="item.question"
+                    ></v-list-item-title>
                   </v-list-item-content>
                   <v-list-item-action>
                     <v-menu
@@ -199,7 +188,7 @@
 
                         <v-divider v-if="page.delete || page.edit"></v-divider>
                         <v-list-item
-                          @click="editRecord(item.uuid)"
+                          @click="editRecord(item.id)"
                           v-show="page.actions.edit"
                         >
                           <v-list-item-title>
@@ -208,7 +197,7 @@
                           </v-list-item-title>
                         </v-list-item>
                         <v-list-item
-                          @click="postDeleteRecord(item.uuid)"
+                          @click="postDeleteRecord(item.id)"
                           v-show="page.actions.delete"
                         >
                           <v-list-item-title>
@@ -219,13 +208,11 @@
                       </v-list>
                     </v-menu>
                   </v-list-item-action>
-
                 </template>
               </v-list-item>
 
             </v-list-item-group>
           </v-list>
-
         </v-card>
       </v-col>
     </v-row>
@@ -233,7 +220,7 @@
       <v-dialog
         transition="dialog-bottom-transition"
         v-model="form.add"
-        :max-width="device.desktop ? `800px` : `100%`"
+        :max-width="device.desktop ? `1024px` : `100%`"
         persistent
         :fullscreen="device.mobile"
       >
@@ -242,107 +229,106 @@
             :color="theme.color"
             :dark="theme.mode"
           >
-            <v-icon class="mr-1">mdi-circle</v-icon> Formulir Permohonan Fitur
+            <v-icon
+              small
+              class="mr-1 orange--text animate__animated animate__flash animate__infinite"
+            >mdi-circle</v-icon> Formulir Data Umpan Balik
           </v-toolbar>
-          <v-card-text class="mt-2">
+          <v-card-text class="mt-5">
             <v-col col="12">
               <v-select
-                label="Jenis Laporan"
+                label="Pilih Sekolah"
                 outlined
                 dense
                 hide-details
-                v-model="record.jenis_pengaduan_uuid"
-                :items="jenispengaduans"
+                :color="theme.color"
+                v-model="record.master_sekolah_uuid"
+                :items="sekolahs"
               ></v-select>
             </v-col>
-            <v-col :cols="device.desktop ? `12`:`12`">
-              <v-textarea
-                label="Isi Laporan"
+            <v-col cols="12">
+              <v-text-field
+                label="Tanggal Pelaksanaan"
                 outlined
                 dense
                 hide-details
-                rows="2"
-                v-model="record.content"
-              ></v-textarea>
-            </v-col>
-            <v-col cols="12">
-
-              <v-text-field
-                label="Foto"
-                append-outer-icon="attachment"
-                v-model="foto"
+                v-model="record.implementation_at"
                 :color="theme.color"
-                outlined
-                dense
-                @click:append-outer="uploadFile"
+                type="date"
               ></v-text-field>
-
             </v-col>
-
-            <v-row class="justify-center mb-5 mt-5 title">PETA LOKASI</v-row>
-            <v-col>
-              <v-img
-                height="100%"
-                width="100%"
+            <v-col cols=12>
+              <v-data-table
+                v-show="device.desktop"
+                :headers="questions.headers"
+                :items="questions.records"
+                class="elevation-2 mb-1"
+                :color="theme.color"
+                loading-text="Loading... Please wait"
+                hide-default-footer
               >
+                <template v-slot:item.question="{ value }">
+                  <div v-html="value"></div>
+                </template>
+                <template v-slot:item.tidak_sesuai="{ value }">
+                  <v-text-field
+                    label=""
+                    outlined
+                    dense
+                    hide-details
+                    v-model="value.nilai"
+                    @change="updateQuestionsRecords(value)"
+                  ></v-text-field>
+                </template>
 
-                <l-map
-                  style="height: 300px;width: 100%;z-index:9999; "
-                  :zoom="zoom"
-                  :center="center"
-                  @update:center="centerUpdated"
-                >
-                  <v-geosearch
-                    :options="geosearchOptions"
-                    style="width:100px; border: 1px;"
-                  ></v-geosearch>
-                  <l-tile-layer
-                    :url="url"
-                    :attribution="attribution"
-                  ></l-tile-layer>
-                  <l-marker
-                    :key="marker.id"
-                    :visible="marker.visible"
-                    :draggable="marker.draggable"
-                    :lat-lng.sync="marker.position"
+                <template v-slot:item.sesuai="{ value }">
+                  <v-text-field
+                    label=""
+                    outlined
+                    dense
+                    hide-details
+                    v-model="value.nilai"
+                    @change="updateQuestionsRecords(value)"
+                  ></v-text-field>
+                </template>
+
+                <template v-slot:item.sangat_sesuai="{ value }">
+                  <v-text-field
+                    label=""
+                    outlined
+                    dense
+                    hide-details
+                    v-model="value.nilai"
+                    @change="updateQuestionsRecords(value)"
+                  ></v-text-field>
+                </template>
+                <template v-slot:item.id="{ value }">
+                  <v-menu
+                    bottom
+                    origin="center center"
+                    transition="scale-transition"
                   >
-
-                    <l-icon
-                      iconSize=32
-                      icon-url="/images/icon-marker-merah.png"
-                    />
-                    <l-popup :content="marker.tooltip" />
-                    <l-tooltip :content="marker.tooltip" />
-                  </l-marker>
-                </l-map>
-
-              </v-img>
-
-            </v-col>
-
-            <v-col cols="12">
-              <v-row>
-
-                <v-col :cols="device.desktop ? `6`:`12`">
-                  <v-text-field
-                    label="Garis Lintang"
-                    outlined
-                    dense
-                    hide-details
-                    v-model="record.lat"
-                  ></v-text-field>
-                </v-col>
-
-                <v-col :cols="device.desktop ? `6`:`12`">
-                  <v-text-field
-                    label="Garis Bujur"
-                    outlined
-                    dense
-                    hide-details
-                    v-model="record.lng"
-                  ></v-text-field>
-                </v-col>
-              </v-row>
+                    <template v-slot:activator="{ on, attrs }">
+                      <v-icon
+                        :color="theme.color"
+                        v-bind="attrs"
+                        v-on="on"
+                      >
+                        mdi-dots-vertical-circle-outline
+                      </v-icon>
+                    </template>
+                    <v-list>
+                      <v-divider v-if="page.delete || page.edit"></v-divider>
+                      <v-list-item @click="">
+                        <v-list-item-title>
+                          <v-icon color="orange">mdi-pencil-circle</v-icon>
+                          Isi Jumlah
+                        </v-list-item-title>
+                      </v-list-item>
+                    </v-list>
+                  </v-menu>
+                </template>
+              </v-data-table>
             </v-col>
 
           </v-card-text>
@@ -353,13 +339,13 @@
               :color="theme.color"
               v-show="!form.edit"
               @click="postAddNewRecord"
-            >Kirim</v-btn>
+            >Tambah</v-btn>
             <v-btn
               outlined
               :color="theme.color"
               v-show="form.edit"
               @click="postUpdateRecord"
-            >Kirim</v-btn>
+            >Ubah</v-btn>
             <v-btn
               outlined
               color="grey"
@@ -371,106 +357,126 @@
     </v-col>
   </div>
 </template>
-  
-  <script >
+      
+  <script>
 import { mapActions, mapState } from "vuex";
 import "animate.css";
 import {
-  LMap,
-  LTileLayer,
-  LMarker,
-  LIcon,
-  LPopup,
-  LTooltip,
-} from "vue2-leaflet";
-import { OpenStreetMapProvider } from "leaflet-geosearch";
-import VGeosearch from "vue2-leaflet-geosearch";
-import "leaflet/dist/leaflet.css";
+  TiptapVuetify,
+  Heading,
+  Bold,
+  Italic,
+  Strike,
+  Underline,
+  Code,
+  Paragraph,
+  BulletList,
+  OrderedList,
+  ListItem,
+  Link,
+  Blockquote,
+  HardBreak,
+  HorizontalRule,
+  History,
+} from "tiptap-vuetify";
 
 export default {
-  name: "laporan-perlatan-jalan-dan-laka",
+  name: "aktivitas",
   components: {
-    LMap,
-    LTileLayer,
-    LMarker,
-    VGeosearch,
-    LIcon,
-    LPopup,
-    LTooltip,
+    TiptapVuetify,
   },
   data: () => ({
     num: 1,
     headers: [
       {
-        text: "LAPORAN/KEJADIAN",
+        text: "SMK",
         align: "start",
         sortable: false,
-        value: "content",
+        value: "sekolah",
       },
       {
-        text: "LOKASI",
-        value: "lokasi",
-        width: 160,
-        align: "center",
+        text: "Tanggal",
+        value: "implementation_at",
+        width: 100,
         sortable: false,
+        align: "center",
       },
       {
-        text: "STATUS",
-        value: "status",
-        width: 160,
-        align: "center",
-        sortable: false,
-      },
-      {
-        text: "AKSI",
-        value: "aksi",
-        width: 85,
+        text: "Aksi",
+        value: "id",
+        width: 100,
         sortable: false,
         align: "center",
-        sortable: false,
       },
     ],
-
     search: null,
     path: null,
+    //Tip Tap Property
+    extensions: [
+      History,
+      Blockquote,
+      Bold,
+      Strike,
+      Italic,
+      ListItem,
+      BulletList,
+      OrderedList,
+      [
+        Heading,
+        {
+          options: {
+            levels: [1, 2, 3],
+          },
+        },
+      ],
 
-    rambus: [],
-    kecamatans: [],
-    desas: [],
-
-    url: "https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png",
-    attribution:
-      '&copy; <a target="_blank" href="http://osm.org/copyright">OpenStreetMap</a> contributors',
-    zoom: 13,
-    //-6.1716001, 106.6405384
-    center: [-6.1716001, 106.6405384],
-
-    geosearchOptions: {
-      // Important part Here
-      provider: new OpenStreetMapProvider(),
-    },
-    marker: {
-      id: "m1",
-      position: { lat: -6.1716001, lng: 106.6405384 },
-      tooltip: "Pilih lokasi rambu",
-      draggable: true,
-      visible: true,
-    },
-
-    jenispengaduans: [],
-
-    foto: null,
-
-    kondisis: [
-      { text: "Baik", value: "baik" },
-      { text: "Rusak", value: "rusak" },
+      Paragraph,
     ],
+    sekolahs: [],
+    questions: {
+      headers: [
+        {
+          text: "Jenis",
+          align: "start",
+          sortable: false,
+          value: "jenis",
+          width: 150,
+        },
+        {
+          text: "Pertanyaan",
+          align: "start",
+          sortable: false,
+          value: "question",
+        },
+        {
+          text: "Tidak Sesuai",
+          align: "center",
+          sortable: false,
+          value: "tidak_sesuai",
+          width: 100,
+        },
+        {
+          text: "Sesuai",
+          align: "center",
+          sortable: false,
+          value: "sesuai",
+          width: 100,
+        },
+        {
+          text: "Sangat Sesuai",
+          align: "center",
+          sortable: false,
+          value: "sangat_sesuai",
+          width: 100,
+        },
+      ],
+      records: [],
+      record: {},
+    },
   }),
   computed: {
     ...mapState([
       "page",
-      "table",
-      "form",
       "theme",
       "http",
       "device",
@@ -479,12 +485,14 @@ export default {
       "loading",
       "event",
       "snackbar",
+      "table",
+      "form",
     ]),
     filterItems() {
       if (this.search != null) {
         return this.records.filter((item) => {
           return (
-            item.content.toLowerCase().indexOf(this.search.toLowerCase()) > -1
+            item.name.toLowerCase().indexOf(this.search.toLowerCase()) > -1
           );
         });
       } else {
@@ -495,41 +503,47 @@ export default {
   created() {
     this.setPage({
       crud: true,
-      dataUrl: "api/keselamatan/laporan-keselamatan",
+      dataUrl: "api/aktifitas/trx",
       pagination: false,
-      key: "id",
-      title: "LAPORAN PERL. DAN LAKA - LANTAS",
-      subtitle:
-        "Berikut Daftar Seluruh Lap Perl dan Laka Lantas  Yang Tersedia",
-
+      title: "DATA UMPAN BALIK",
+      subtitle: "Berikut Daftar Data Umpan Balik Yang Tersedia",
       breadcrumbs: [
         {
-          text: "LAPORAN",
-          disabled: false,
+          text: "Data Master",
+          disabled: true,
           href: "",
         },
         {
-          text: "Peralatan Dan Laka Lantas",
-          disabled: false,
-          href: "rambu",
+          text: "Pertanyaan",
+          disabled: true,
+          href: "#",
         },
       ],
       showtable: true,
       actions: {
         refresh: true,
         add: true,
-        edit: true,
+        edit: false,
         delete: true,
         bulkdelete: false,
-        export: false,
         print: false,
+        export: false,
         help: false,
       },
     });
-    this.fetchRecords();
-    this.fetchJenisPengaduans();
+
+    this.fetchRecords().then(() => {
+      setTimeout(() => {
+        this.table.options.itemsPerPage =
+          this.$route.params.itemsPerPage || this.table.options.itemsPerPage;
+        this.table.options.page =
+          this.$route.params.page || this.table.options.page;
+      }, 100);
+    });
   },
-  mounted() {},
+  mounted() {
+    this.getSekolahs();
+  },
   methods: {
     ...mapActions([
       "setPage",
@@ -548,13 +562,8 @@ export default {
         add: true,
         edit: false,
       });
+      this.getQuestions();
       this.setRecord({});
-      this.foto = null;
-      this.getUserPosition();
-      this.centerUpdated([-6.1716001, 106.6405384]);
-      setTimeout(function () {
-        window.dispatchEvent(new Event("resize"));
-      }, 250);
     },
     closeForm: function () {
       this.setForm({
@@ -562,25 +571,15 @@ export default {
         edit: false,
       });
     },
-
     postAddNewRecord: function () {
+      this.record.trxlines = this.questions.records;
+      Object.assign(this.record, { trxlines: this.questions.records });
       this.postAddNew(this.record).then(() => {
         this.closeForm();
-        this.fetchRecords();
       });
     },
     editRecord: function (val) {
-      this.postEdit(val).then(() => {
-        this.center = [this.record.lat, this.record.lng];
-        this.marker.position = {
-          lat: this.record.lat,
-          lng: this.record.lng,
-        };
-        setTimeout(function () {
-          window.dispatchEvent(new Event("resize"));
-        }, 250);
-        this.foto = this.record.foto_awal;
-      });
+      this.postEdit(val);
       this.setForm({
         add: true,
         edit: true,
@@ -598,74 +597,31 @@ export default {
       window.open(val, "__blank");
     },
 
-    //fetch data combo rambu
-    fetchJenisPengaduans: async function () {
+    //custome function
+    getSekolahs: async function () {
       try {
-        let { data } = await this.http.get("api/combo/jenis-pengaduan");
-        this.jenispengaduans = data;
+        let { data } = await this.http.get("api/combo/sekolah");
+        this.sekolahs = data;
       } catch (error) {}
     },
 
-    fetchKecamatan: async function () {
+    getQuestions: async function () {
       try {
-        let { data } = await this.http.get("api/combo/kecamatan");
-        this.kecamatans = data;
+        let { data } = await this.http.get("api/master-data/pertanyaan-all");
+        this.questions.records = data;
       } catch (error) {}
     },
 
-    fetchDesas: async function () {
-      try {
-        let { data } = await this.http.get(
-          "api/combo/desa/" + this.record.district_uuid
-        );
-        this.desas = data;
-      } catch (error) {}
-    },
-    getUserPosition: async function () {
-      if (navigator.geolocation) {
-        navigator.geolocation.getCurrentPosition((pos) => {
-          this.center = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-          this.center = [pos.coords.latitude, pos.coords.longitude];
-          this.marker.position = {
-            lat: pos.coords.latitude,
-            lng: pos.coords.longitude,
-          };
-        });
-      }
-    },
-    centerUpdated(center) {
-      this.center = center;
-    },
-    uploadFile: function () {
-      this.assignFileBrowse({
-        fileType: [".png", ".jpg", ".jpeg"],
-        query: {
-          doctype: "laporans",
-        },
-        callback: (response) => {
-          setTimeout(() => {
-            this.foto = response.name;
-            this.record.foto_awal = response.name;
-            this.snackbar.color = this.theme.color;
-            this.snackbar.text = "Proses upload foto berhasil";
-            this.snackbar.state = true;
-          }, 500);
-        },
-      });
-    },
-  },
-  watch: {
-    "marker.position": {
-      handler() {
-        this.record.lat = this.marker.position.lat;
-        this.record.lng = this.marker.position.lng;
-      },
-      deep: true,
-    },
-    district_uuid: {
-      handler() {
-        this.fetchDesas();
-      },
+    updateQuestionsRecords: function (payload) {
+      const index = this.questions.records.findIndex(
+        (item) => item.id === payload.id
+      );
+
+      this.questions.records[index][payload.key] = {
+        id: payload.id,
+        nilai: payload.nilai,
+        key: payload.key,
+      };
     },
   },
 };

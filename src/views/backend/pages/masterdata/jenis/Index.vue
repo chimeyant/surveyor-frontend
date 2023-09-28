@@ -113,7 +113,7 @@
                 </template>
 
                 <v-list>
-                  <v-list-item @click="">
+                  <v-list-item @click="openQuestion(value)">
                     <v-list-item-title>
                       <v-icon :color="theme.color">mdi-playlist-plus</v-icon>
                       Pengaturan Pertanyaan
@@ -181,10 +181,10 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="openRambu(item.id)">
+                        <v-list-item @click="openQuestion(item.id)">
                           <v-list-item-title>
-                            <v-icon :color="theme.color">mdi-triforce</v-icon>
-                            Atur Rambu
+                            <v-icon :color="theme.color">mdi-playlist-plus</v-icon>
+                            Pengaturan Pertanyaan
                           </v-list-item-title>
                         </v-list-item>
                         <v-divider v-if="page.delete || page.edit"></v-divider>
@@ -199,7 +199,7 @@
                         </v-list-item>
                         <v-list-item
                           @click="postDeleteRecord(item.id)"
-                          v-show="page.delete"
+                          v-show="page.actions.delete"
                         >
                           <v-list-item-title>
                             <v-icon color="red">mdi-delete-circle</v-icon>
@@ -418,6 +418,18 @@ export default {
     },
     postDownload(val) {
       window.open(val, "__blank");
+    },
+
+    /**
+     * Custome Functions
+     */
+    openQuestion: function (val) {
+      this.$router.push({
+        name: "master-question",
+        params: {
+          master_type_uuid: val,
+        },
+      });
     },
   },
 };

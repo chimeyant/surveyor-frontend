@@ -14,8 +14,30 @@
                   small
                   icon
                   v-on="on"
+                  class=""
+                  @click="$router.push({name:'master-jenis'})"
+                >
+                  <v-icon
+                    :color="theme.mode == 'dark' ? `white` : `black`"
+                    @click=""
+                  >mdi-close-circle</v-icon>
+                </v-btn>
+              </template>
+              <span>Tambah Data</span>
+            </v-tooltip>
+            <v-tooltip
+              :color="theme.color"
+              bottom
+            >
+              <template v-slot:activator="{ on }">
+                <v-btn
+                  text
+                  small
+                  icon
+                  v-on="on"
                   class="animate__animated animate__shakeY animate__delay-1s"
                   v-show="page.actions.add"
+                  @click="openForm"
                 >
                   <v-icon
                     :color="theme.mode == 'dark' ? `white` : `black`"
@@ -88,14 +110,21 @@
                 <strong>{{ value }}%</strong>
               </v-progress-linear>
             </template>
+            <template v-slot:item.question="{ value }">
+              <div
+                class="pt-4"
+                v-html="value"
+              >
 
+              </div>
+            </template>
             <template v-slot:item.status="{ value }">
               <v-chip
                 :color="value.color"
                 small
               >{{ value.text }}</v-chip>
             </template>
-            <template v-slot:item.uuid="{ value }">
+            <template v-slot:item.id="{ value }">
               <v-menu
                 bottom
                 origin="center center"
@@ -112,10 +141,24 @@
                 </template>
 
                 <v-list>
-                  <v-list-item @click="openRambu(value)">
+
+                  <v-divider v-if="page.delete || page.edit"></v-divider>
+                  <v-list-item
+                    @click="editRecord(value)"
+                    v-show="page.actions.edit"
+                  >
                     <v-list-item-title>
-                      <v-icon :color="theme.color">mdi-triforce</v-icon>
-                      Atur Rambu - Rambu
+                      <v-icon color="orange">mdi-pencil-circle</v-icon>
+                      Ubah Data
+                    </v-list-item-title>
+                  </v-list-item>
+                  <v-list-item
+                    @click="postDeleteRecord(value)"
+                    v-show="page.actions.delete"
+                  >
+                    <v-list-item-title>
+                      <v-icon color="red">mdi-delete-circle</v-icon>
+                      Hapus Data
                     </v-list-item-title>
                   </v-list-item>
                 </v-list>
@@ -141,8 +184,10 @@
                     <v-checkbox :input-value="active"></v-checkbox>
                   </v-list-item-action>
                   <v-list-item-content>
-                    <v-list-item-title>Jenis : {{ item.name }}</v-list-item-title>
-                    <v-list-item-subtitle>Jumlah Rambu :{{ item.jmlrambu }} </v-list-item-subtitle>
+                    <v-list-item-title
+                      class="pt-4"
+                      v-html="item.question"
+                    ></v-list-item-title>
                   </v-list-item-content>
                   <v-list-item-action>
                     <v-menu
@@ -161,16 +206,11 @@
                       </template>
 
                       <v-list>
-                        <v-list-item @click="openRambu(item.id)">
-                          <v-list-item-title>
-                            <v-icon :color="theme.color">mdi-triforce</v-icon>
-                            Atur Rambu
-                          </v-list-item-title>
-                        </v-list-item>
+
                         <v-divider v-if="page.delete || page.edit"></v-divider>
                         <v-list-item
                           @click="editRecord(item.id)"
-                          v-show="page.edit"
+                          v-show="page.actions.edit"
                         >
                           <v-list-item-title>
                             <v-icon color="orange">mdi-pencil-circle</v-icon>
@@ -179,7 +219,7 @@
                         </v-list-item>
                         <v-list-item
                           @click="postDeleteRecord(item.id)"
-                          v-show="page.delete"
+                          v-show="page.actions.delete"
                         >
                           <v-list-item-title>
                             <v-icon color="red">mdi-delete-circle</v-icon>
@@ -202,43 +242,37 @@
       <v-dialog
         transition="dialog-bottom-transition"
         v-model="form.add"
-        :max-width="device.desktop ? `600px` : `100%`"
+        :max-width="device.desktop ? `800px` : `100%`"
         persistent
+        :fullscreen="device.mobile"
       >
         <v-card>
           <v-toolbar
             :color="theme.color"
             :dark="theme.mode"
           >
-            <v-icon class="mr-1">mdi-circle</v-icon> Formulir Permohonan Fitur
+            <v-icon
+              small
+              class="mr-1 orange--text animate__animated animate__flash animate__infinite"
+            >mdi-circle</v-icon> Formulir Master Pertanyaan
           </v-toolbar>
-          <v-card-text class="mt-2">
+          <v-card-text class="mt-5">
             <v-col col="12">
-              <v-text-field
-                outlined
-                :color="theme.color"
-                :hide-details="device.desktop"
-                label="Fitur"
-                v-model="record.title"
-                :filled="record.title"
-                dense
-              ></v-text-field>
+              <tiptap-vuetify
+                v-model="record.question"
+                :extensions="extensions"
+                placeholder="Silahkan isi pertanyaan anda..!"
+              />
             </v-col>
-
-            <v-col cols="12">
-              <v-textarea
-                label="Perihal / Permasalahan"
+            <v-col cols=12>
+              <v-switch
+                label="Aktif"
                 :color="theme.color"
-                dense
+                v-model="record.status"
                 outlined
-                v-model="record.content"
-                :filled="record.content"
-                hide-details
-              >
-                {{ record.content }}
-              </v-textarea>
+                dense
+              ></v-switch>
             </v-col>
-
           </v-card-text>
           <v-divider></v-divider>
           <v-card-actions class="justify-end">
@@ -247,13 +281,13 @@
               :color="theme.color"
               v-show="!form.edit"
               @click="postAddNewRecord"
-            >Kirim</v-btn>
+            >Tambah</v-btn>
             <v-btn
               outlined
               :color="theme.color"
               v-show="form.edit"
               @click="postUpdateRecord"
-            >Kirim</v-btn>
+            >Ubah</v-btn>
             <v-btn
               outlined
               color="grey"
@@ -265,25 +299,46 @@
     </v-col>
   </div>
 </template>
-
+    
 <script>
 import { mapActions, mapState } from "vuex";
 import "animate.css";
+import {
+  TiptapVuetify,
+  Heading,
+  Bold,
+  Italic,
+  Strike,
+  Underline,
+  Code,
+  Paragraph,
+  BulletList,
+  OrderedList,
+  ListItem,
+  Link,
+  Blockquote,
+  HardBreak,
+  HorizontalRule,
+  History,
+} from "tiptap-vuetify";
 
 export default {
-  name: "page-jenis-rambu",
+  name: "master-question",
+  components: {
+    TiptapVuetify,
+  },
   data: () => ({
     num: 1,
     headers: [
       {
-        text: "Jenis",
+        text: "PERTANYAAN",
         align: "start",
         sortable: false,
-        value: "name",
+        value: "question",
       },
       {
-        text: "Aksi",
-        value: "uuid",
+        text: "AKSI",
+        value: "id",
         width: 100,
         sortable: false,
         align: "center",
@@ -291,6 +346,27 @@ export default {
     ],
     search: null,
     path: null,
+    //Tip Tap Property
+    extensions: [
+      History,
+      Blockquote,
+      Bold,
+      Strike,
+      Italic,
+      ListItem,
+      BulletList,
+      OrderedList,
+      [
+        Heading,
+        {
+          options: {
+            levels: [1, 2, 3],
+          },
+        },
+      ],
+
+      Paragraph,
+    ],
   }),
   computed: {
     ...mapState([
@@ -321,10 +397,11 @@ export default {
   created() {
     this.setPage({
       crud: true,
-      dataUrl: "api/superadmin/master-data/jenis-rambu",
+      dataUrl:
+        "api/master-data/pertanyaan/" + this.$route.params.master_type_uuid,
       pagination: false,
-      title: "MASTER RAMBU",
-      subtitle: "Berikut Daftar Jenis Rambu Yang Tersedia",
+      title: "MASTER PERTANYAAN",
+      subtitle: "Berikut Daftar Pertanyaan Yang Tersedia",
       breadcrumbs: [
         {
           text: "Data Master",
@@ -332,15 +409,15 @@ export default {
           href: "",
         },
         {
-          text: "Jenis Rambu",
+          text: "Pertanyaan",
           disabled: true,
-          href: "master-rambu",
+          href: "#",
         },
       ],
       showtable: true,
       actions: {
         refresh: true,
-        add: false,
+        add: true,
         edit: true,
         delete: true,
         bulkdelete: false,
@@ -378,25 +455,13 @@ export default {
         add: true,
         edit: false,
       });
+      this.setRecord({});
     },
     closeForm: function () {
       this.setForm({
         add: false,
         edit: false,
       });
-    },
-    openNewForm: function () {
-      this.setRecord({});
-      this.form.new = true;
-      this.form.edit = false;
-    },
-    closeNewForm: function () {
-      this.form.new = false;
-      this.form.edit = false;
-    },
-    openEditForm: function () {
-      this.form.new = true;
-      this.form.edit = true;
     },
     postAddNewRecord: function () {
       this.postAddNew(this.record).then(() => {
@@ -420,16 +485,6 @@ export default {
     },
     postDownload(val) {
       window.open(val, "__blank");
-    },
-    openRambu: function (val) {
-      this.$router.push({
-        name: "master-rambu",
-        params: {
-          jenis_rambu_uuid: val,
-          itemsPerPage: this.table.options.itemsPerPage,
-          page: this.table.options.page,
-        },
-      });
     },
   },
 };

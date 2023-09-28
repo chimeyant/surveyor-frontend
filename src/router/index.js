@@ -24,6 +24,10 @@ import UtilityUpdateHistoryItem from "../views/backend/pages/utility/updatehisto
 import MasterAppInfo from "../views/backend/pages/masterdata/appinfo/Index.vue";
 import MasterSekolah from "../views/backend/pages/masterdata/sekolah/Index.vue";
 import MasterJenis from "../views/backend/pages/masterdata/jenis/Index.vue";
+import MasterQuestion from "../views/backend/pages/masterdata/jenis/question/Index.vue";
+
+//page aktifitas
+import Aktifitas from "../views/backend/pages/aktifitas/Index.vue";
 
 Vue.use(VueRouter);
 
@@ -79,6 +83,21 @@ const routes = [
         path: "master-jenis",
         name: "master-jenis",
         component: MasterJenis,
+      },
+      {
+        path: "master-question/:master_type_uuid",
+        name: "master-question",
+        component: MasterQuestion,
+      },
+
+      /**
+       *
+       * Route Aktifitas
+       */
+      {
+        path: "aktifitas",
+        name: "aktifitas",
+        component: Aktifitas,
       },
 
       /**
